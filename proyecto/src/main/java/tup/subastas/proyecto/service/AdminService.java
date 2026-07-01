@@ -42,6 +42,16 @@ public class AdminService {
         return usuarioRepository.save(usuario);
     }
 
+    @Transactional
+    public Usuario quitarRol(Long usuarioId, NombreRol nombreRol) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Rol rol = rolRepository.findByNombre(nombreRol)
+                .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+        usuario.getRoles().remove(rol);
+        return usuarioRepository.save(usuario);
+    }
+
     public java.util.List<Usuario> listarUsuarios() {
         return usuarioRepository.findAll();
     }

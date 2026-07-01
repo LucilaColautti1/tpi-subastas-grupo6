@@ -9,6 +9,7 @@ import tup.subastas.proyecto.enums.EstadoSubasta;
 import tup.subastas.proyecto.repository.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -16,6 +17,7 @@ public class PujaService {
 
     private final SubastaRepository subastaRepository;
     private final PujaRepository pujaRepository;
+    private final EmailService emailService;
 
     @Transactional
     public Puja pujar(Long subastaId, Usuario usuario, BigDecimal monto) {
@@ -25,6 +27,14 @@ public class PujaService {
 
         if (subasta.getEstado() != EstadoSubasta.ACTIVA) {
             throw new RuntimeException("La subasta no está activa");
+        }
+
+        if (LocalDateTime.now(java.time.ZoneOffset.UTC).isAfter(subasta.getFechaCierre())) {
+            throw new RuntimeException("La subasta ya cerró");
+        }
+
+        if (usuario.isBloqueado()) {
+            throw new RuntimeException("Tu cuenta está bloqueada. No podés realizar pujas.");
         }
 
         BigDecimal minimo = subasta.getMontoActual().add(subasta.getIncrementoMinimo());
@@ -52,6 +62,9 @@ public class PujaService {
         puja.setSubasta(subasta);
         puja.setUsuario(usuario);
         puja.setMonto(monto);
-        return pujaRepository.save(puja);
+        Puja guardada = pujaRepository.save(puja);
+        emailService.notificarNuevaPuja(subasta.getVendedor().getEmail(),
+            subasta.getProducto().getTitulo(), monto.toString());
+        return guardada;
     }
 }

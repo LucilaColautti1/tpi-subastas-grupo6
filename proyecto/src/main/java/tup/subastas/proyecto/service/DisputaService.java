@@ -18,6 +18,7 @@ public class DisputaService {
     private final DisputaRepository disputaRepository;
     private final SubastaRepository subastaRepository;
     private final HistorialEstadoRepository historialEstadoRepository;
+    private final EmailService emailService;
 
     @Transactional
     public Disputa abrir(Long subastaId, Usuario iniciador, String motivo, String descripcion) {
@@ -46,7 +47,10 @@ public class DisputaService {
         subasta.setEstado(EstadoSubasta.EN_DISPUTA);
         subastaRepository.save(subasta);
 
-        return disputaRepository.save(disputa);
+        Disputa guardada = disputaRepository.save(disputa);
+        emailService.notificarDisputaAbierta(subasta.getVendedor().getEmail(),
+            subasta.getProducto().getTitulo(), motivo);
+        return guardada;
     }
 
     @Transactional
@@ -72,7 +76,17 @@ public class DisputaService {
         subasta.setEstado(estadoFinal);
         subastaRepository.save(subasta);
 
-        return disputaRepository.save(disputa);
+        Disputa resuelta = disputaRepository.save(disputa);
+
+        // Notificar por email al vendedor y al ganador
+        emailService.notificarDisputaResuelta(subasta.getVendedor().getEmail(),
+            subasta.getProducto().getTitulo(), req.getResolucion(), estadoFinal.name());
+        if (subasta.getGanador() != null) {
+            emailService.notificarDisputaResuelta(subasta.getGanador().getEmail(),
+                subasta.getProducto().getTitulo(), req.getResolucion(), estadoFinal.name());
+        }
+
+        return resuelta;
     }
 
     private void registrarCambioEstado(Subasta subasta, EstadoSubasta nuevo, Usuario actor, String motivo) {

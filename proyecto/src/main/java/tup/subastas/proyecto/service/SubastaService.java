@@ -23,6 +23,7 @@ public class SubastaService {
     private final PujaRepository pujaRepository;
     private final HistorialEstadoRepository historialEstadoRepository;
     private final NotificacionRepository notificacionRepository;
+    private final EmailService emailService;
 
     @Scheduled(fixedDelay = 60000)
     @Transactional
@@ -71,10 +72,18 @@ public class SubastaService {
             // Notificación al vendedor
             notificar(subasta.getVendedor(), subasta,
                 "Tu subasta '" + subasta.getProducto().getTitulo() + "' fue adjudicada.");
+
+            // Emails
+            emailService.notificarSubastaFinalizada(subasta.getVendedor().getEmail(),
+                subasta.getProducto().getTitulo(), true, subasta.getPrecioFinal().toString());
+            emailService.notificarGanador(subasta.getGanador().getEmail(),
+                subasta.getProducto().getTitulo(), subasta.getPrecioFinal().toString());
         } else {
             estadoNuevo = EstadoSubasta.FINALIZADA;
             notificar(subasta.getVendedor(), subasta,
                 "Tu subasta '" + subasta.getProducto().getTitulo() + "' finalizó sin pujas.");
+            emailService.notificarSubastaFinalizada(subasta.getVendedor().getEmail(),
+                subasta.getProducto().getTitulo(), false, null);
         }
 
         registrarCambioEstado(subasta, estadoNuevo, null, "Cierre automático por fecha");

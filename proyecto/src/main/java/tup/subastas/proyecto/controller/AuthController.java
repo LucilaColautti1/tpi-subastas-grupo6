@@ -35,7 +35,10 @@ public class AuthController {
         Authentication auth = authManager.authenticate(
             new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword())
         );
-        String token = jwtUtil.generateToken(auth.getName());
+        Usuario usuario = usuarioRepository.findByEmail(auth.getName()).orElseThrow();
+        java.util.List<String> roles = usuario.getRoles().stream()
+                .map(r -> r.getNombre().name()).collect(java.util.stream.Collectors.toList());
+        String token = jwtUtil.generateToken(auth.getName(), usuario.getNombre(), roles);
         return ResponseEntity.ok(Map.of("token", token));
     }
 

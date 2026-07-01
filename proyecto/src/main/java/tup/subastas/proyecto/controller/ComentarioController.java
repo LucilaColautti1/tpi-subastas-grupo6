@@ -47,6 +47,11 @@ public class ComentarioController {
         comentario.setSubasta(subasta);
         comentario.setUsuario(usuario);
         comentario.setTexto(req.getTexto());
+        if (req.getPadreId() != null) {
+            Comentario padre = comentarioRepository.findById(req.getPadreId())
+                    .orElseThrow(() -> new RuntimeException("Comentario padre no encontrado"));
+            comentario.setPadre(padre);
+        }
         return ResponseEntity.ok(comentarioRepository.save(comentario));
     }
 
@@ -74,4 +79,5 @@ public class ComentarioController {
 class ComentarioRequest {
     @NotBlank
     private String texto;
+    private Long padreId;
 }

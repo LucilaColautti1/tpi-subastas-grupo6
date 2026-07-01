@@ -30,6 +30,10 @@ public class Comentario {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String texto;
 
+    @ManyToOne
+    @JoinColumn(name = "padre_id")
+    private Comentario padre;
+
     @Column(nullable = false)
     private LocalDateTime fecha = LocalDateTime.now(ZoneOffset.UTC);
 }

@@ -30,6 +30,7 @@ public class SubastaController {
     private final ProductoRepository productoRepository;
     private final UsuarioRepository usuarioRepository;
     private final PujaRepository pujaRepository;
+    private final tup.subastas.proyecto.service.EmailService emailService;
 
     @GetMapping
     public List<Subasta> listarActivas() {
@@ -79,6 +80,17 @@ public class SubastaController {
         Usuario vendedor = usuarioRepository.findByEmail(userDetails.getUsername()).orElseThrow();
         Producto producto = productoRepository.findById(req.getProductoId()).orElseThrow();
 
+        // Validar que el producto no tenga una subasta activa
+        java.util.List<Subasta> subastasExistentes = subastaRepository.findByProducto(producto);
+        boolean tieneSubastaActiva = subastasExistentes.stream().anyMatch(s ->
+            s.getEstado().name().equals("ACTIVA") ||
+            s.getEstado().name().equals("PUBLICADA") ||
+            s.getEstado().name().equals("ADJUDICADA") ||
+            s.getEstado().name().equals("EN_DISPUTA")
+        );
+        if (tieneSubastaActiva)
+            throw new RuntimeException("Este producto ya tiene una subasta activa o pendiente");
+
         Subasta subasta = new Subasta();
         subasta.setProducto(producto);
         subasta.setVendedor(vendedor);
@@ -88,7 +100,9 @@ public class SubastaController {
         subasta.setFechaInicio(req.getFechaInicio());
         subasta.setFechaCierre(req.getFechaCierre());
 
-        return ResponseEntity.ok(subastaRepository.save(subasta));
+        Subasta guardada = subastaRepository.save(subasta);
+        emailService.notificarSubastaCreada(vendedor.getEmail(), producto.getTitulo());
+        return ResponseEntity.ok(guardada);
     }
 
     @PutMapping("/seller/{id}")

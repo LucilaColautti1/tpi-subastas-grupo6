@@ -9,6 +9,9 @@ import tup.subastas.proyecto.entity.Producto;
 import tup.subastas.proyecto.entity.Usuario;
 import tup.subastas.proyecto.repository.CategoriaRepository;
 import tup.subastas.proyecto.repository.ProductoRepository;
+import tup.subastas.proyecto.repository.SubastaRepository;
+import tup.subastas.proyecto.entity.Subasta;
+import tup.subastas.proyecto.enums.EstadoSubasta;
 
 import java.util.List;
 
@@ -18,6 +21,7 @@ public class ProductoService {
 
     private final ProductoRepository productoRepository;
     private final CategoriaRepository categoriaRepository;
+    private final SubastaRepository subastaRepository;
 
     public List<Producto> listarPorVendedor(Usuario vendedor) {
         return productoRepository.findByVendedor(vendedor);
@@ -33,11 +37,13 @@ public class ProductoService {
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
 
         Producto producto = new Producto();
+        // No editar si tiene subasta activa
+
         producto.setTitulo(req.getTitulo());
         producto.setDescripcion(req.getDescripcion());
         producto.setCategoria(categoria);
         producto.setVendedor(vendedor);
-        if (req.getImagenBase64() != null) producto.setImagenBase64(req.getImagenBase64());
+        if (req.getImagenBase64() != null && !req.getImagenBase64().isEmpty()) producto.setImagenBase64(req.getImagenBase64());
         return productoRepository.save(producto);
     }
 
@@ -57,7 +63,7 @@ public class ProductoService {
         producto.setTitulo(req.getTitulo());
         producto.setDescripcion(req.getDescripcion());
         producto.setCategoria(categoria);
-        if (req.getImagenBase64() != null) producto.setImagenBase64(req.getImagenBase64());
+        if (req.getImagenBase64() != null && !req.getImagenBase64().isEmpty()) producto.setImagenBase64(req.getImagenBase64());
         return productoRepository.save(producto);
     }
 
@@ -70,6 +76,17 @@ public class ProductoService {
                 .anyMatch(r -> r.getNombre().name().equals("ADMIN"));
         if (!esAdmin && !producto.getVendedor().getId().equals(actor.getId()))
             throw new RuntimeException("No autorizado");
+
+        // No eliminar si tiene subastas activas
+        List<Subasta> subastas = subastaRepository.findByProducto(producto);
+        boolean tieneSubastaActiva = subastas.stream().anyMatch(s ->
+            s.getEstado() == EstadoSubasta.ACTIVA ||
+            s.getEstado() == EstadoSubasta.PUBLICADA ||
+            s.getEstado() == EstadoSubasta.ADJUDICADA ||
+            s.getEstado() == EstadoSubasta.EN_DISPUTA
+        );
+        if (tieneSubastaActiva)
+            throw new RuntimeException("No se puede eliminar un producto con subastas activas o pendientes");
 
         productoRepository.delete(producto);
     }

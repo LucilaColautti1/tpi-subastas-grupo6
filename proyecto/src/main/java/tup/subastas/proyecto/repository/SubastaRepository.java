@@ -13,4 +13,5 @@ public interface SubastaRepository extends JpaRepository<Subasta, Long> {
     List<Subasta> findByEstadoAndFechaInicioBefore(EstadoSubasta estado, LocalDateTime fecha);
     List<Subasta> findByEstado(EstadoSubasta estado);
     List<Subasta> findByVendedor(Usuario vendedor);
+    List<Subasta> findByProducto(tup.subastas.proyecto.entity.Producto producto);
 }

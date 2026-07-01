@@ -40,6 +40,17 @@ public class AdminController {
         }
     }
 
+    @DeleteMapping("/usuarios/{id}/rol")
+    public ResponseEntity<?> quitarRol(
+            @PathVariable Long id,
+            @RequestParam NombreRol rol) {
+        try {
+            return ResponseEntity.ok(adminService.quitarRol(id, rol));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/usuarios/{id}/rol")
     public ResponseEntity<?> asignarRol(
             @PathVariable Long id,
