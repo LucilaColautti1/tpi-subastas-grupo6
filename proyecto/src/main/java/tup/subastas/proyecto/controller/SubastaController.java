@@ -85,7 +85,6 @@ public class SubastaController {
         boolean tieneSubastaActiva = subastasExistentes.stream().anyMatch(s ->
             s.getEstado().name().equals("ACTIVA") ||
             s.getEstado().name().equals("PUBLICADA") ||
-            s.getEstado().name().equals("ADJUDICADA") ||
             s.getEstado().name().equals("EN_DISPUTA")
         );
         if (tieneSubastaActiva)

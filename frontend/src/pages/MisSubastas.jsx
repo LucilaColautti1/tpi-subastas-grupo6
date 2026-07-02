@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import client from '../api/client'
 import toast from 'react-hot-toast'
-import { ArrowLeft, Clock, Pencil, X, Ban } from 'lucide-react'
+import { ArrowLeft, Clock, Pencil, X, Ban, Check } from 'lucide-react'
 
 function Countdown({ fechaCierre }) {
   const [t, setT] = useState('')
@@ -78,6 +78,16 @@ export default function MisSubastas() {
       toast.error(err.response?.data?.error || 'Error al editar')
     } finally {
       setLoadingEdit(false)
+    }
+  }
+
+  const publicar = async (id) => {
+    try {
+      await client.post(`/subastas/seller/${id}/publicar`)
+      toast.success('Subasta publicada')
+      cargar()
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Error al publicar')
     }
   }
 
@@ -188,6 +198,12 @@ export default function MisSubastas() {
                           <button onClick={() => { setCancelando(s); setMotivoCancelacion('') }}
                             style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
                             <Ban size={13} /> Cancelar
+                          </button>
+                        )}
+                        {s.estado === 'BORRADOR' && (
+                          <button onClick={() => publicar(s.id)}
+                            style={{ background: 'none', border: 'none', color: '#3CAC3B', cursor: 'pointer', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <Check size={13} /> Publicar
                           </button>
                         )}
                         {(s.estado === 'BORRADOR' || s.estado === 'PUBLICADA') && (

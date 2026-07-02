@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import client from '../api/client'
 import toast from 'react-hot-toast'
-import { Users, Tag, BarChart2, ArrowLeft, AlertTriangle, X } from 'lucide-react'
+import { Users, Tag, BarChart2, ArrowLeft, AlertTriangle, X, Clock } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export default function AdminPanel() {
@@ -9,6 +9,7 @@ export default function AdminPanel() {
   const [categorias, setCategorias] = useState([])
   const [subastas, setSubastas] = useState([])
   const [disputas, setDisputas] = useState([])
+  const [historial, setHistorial] = useState([])
   const [nuevaCategoria, setNuevaCategoria] = useState('')
   const [tab, setTab] = useState('dashboard')
   const [resolviendo, setResolviendo] = useState(null)
@@ -19,6 +20,7 @@ export default function AdminPanel() {
     client.get('/categorias').then(r => setCategorias(r.data))
     client.get('/subastas/todas').then(r => setSubastas(r.data)).catch(() => {})
     client.get('/disputas/todas').then(r => setDisputas(r.data)).catch(() => {})
+    client.get('/admin/historial').then(r => setHistorial(r.data)).catch(() => {})
   }
 
   useEffect(() => { cargar() }, [])
@@ -66,6 +68,7 @@ export default function AdminPanel() {
     { key: 'usuarios', label: `Usuarios (${usuarios.length})`, icon: <Users size={15} /> },
     { key: 'categorias', label: `Categorías (${categorias.length})`, icon: <Tag size={15} /> },
     { key: 'disputas', label: `Disputas (${disputas.length})`, icon: <AlertTriangle size={15} /> },
+    { key: 'historial', label: `Historial (${historial.length})`, icon: <Clock size={15} /> },
   ]
 
   const estadoLabel = (e) => ({
@@ -252,6 +255,46 @@ export default function AdminPanel() {
                     )}
                   </div>
                 ))
+              }
+            </div>
+          )}
+
+          {tab === 'historial' && (
+            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+              {historial.length === 0
+                ? <div style={{ padding: 48, textAlign: 'center', color: '#888' }}>No hay registros en el historial</div>
+                : <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ background: '#f8f9fc', borderBottom: '1px solid #eee' }}>
+                        <th style={{ padding: '12px', textAlign: 'left', fontSize: 12, color: '#888', fontWeight: 600 }}>Fecha</th>
+                        <th style={{ padding: '12px', textAlign: 'left', fontSize: 12, color: '#888', fontWeight: 600 }}>Subasta</th>
+                        <th style={{ padding: '12px', textAlign: 'left', fontSize: 12, color: '#888', fontWeight: 600 }}>Cambio de estado</th>
+                        <th style={{ padding: '12px', textAlign: 'left', fontSize: 12, color: '#888', fontWeight: 600 }}>Responsable</th>
+                        <th style={{ padding: '12px', textAlign: 'left', fontSize: 12, color: '#888', fontWeight: 600 }}>Motivo</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {historial.map(h => (
+                        <tr key={h.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                          <td style={{ padding: '10px 12px', fontSize: 12, color: '#666', whiteSpace: 'nowrap' }}>
+                            {new Date(h.fecha + 'Z').toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}
+                          </td>
+                          <td style={{ padding: '10px 12px', fontSize: 13 }}>
+                            #{h.subasta?.id} — {h.subasta?.producto?.titulo || 'N/D'}
+                          </td>
+                          <td style={{ padding: '10px 12px', fontSize: 12 }}>
+                            <span style={{ color: '#999' }}>{estadoLabel(h.estadoAnterior) || '—'}</span>
+                            <span style={{ margin: '0 6px', color: '#ccc' }}>→</span>
+                            <span className={`badge ${estadoBadge(h.estadoNuevo)}`}>{estadoLabel(h.estadoNuevo)}</span>
+                          </td>
+                          <td style={{ padding: '10px 12px', fontSize: 13, color: '#555' }}>
+                            {h.usuario?.nombre || <span style={{ color: '#aaa', fontStyle: 'italic' }}>Automático</span>}
+                          </td>
+                          <td style={{ padding: '10px 12px', fontSize: 12, color: '#888' }}>{h.motivo || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
               }
             </div>
           )}

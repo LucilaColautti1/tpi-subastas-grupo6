@@ -16,6 +16,12 @@ import java.util.Map;
 public class AdminController {
 
     private final AdminService adminService;
+    private final tup.subastas.proyecto.repository.HistorialEstadoRepository historialEstadoRepository;
+
+    @GetMapping("/historial")
+    public java.util.List<tup.subastas.proyecto.entity.HistorialEstado> historialCompleto() {
+        return historialEstadoRepository.findAllByOrderByFechaDesc();
+    }
 
     @GetMapping("/usuarios")
     public ResponseEntity<?> listarUsuarios() {
