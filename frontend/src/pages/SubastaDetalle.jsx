@@ -43,10 +43,14 @@ export default function SubastaDetalle() {
   const [comentarios, setComentarios] = useState([])
   const [nuevoComentario, setNuevoComentario] = useState('')
   const [loadingComentario, setLoadingComentario] = useState(false)
+  const [respondiendo, setRespondiendo] = useState(null)
+  const [textoRespuesta, setTextoRespuesta] = useState('')
   const [mostrarDisputa, setMostrarDisputa] = useState(false)
   const [disputaForm, setDisputaForm] = useState({ motivo: '', descripcion: '' })
   const [loadingDisputa, setLoadingDisputa] = useState(false)
   const [mostrarCancelar, setMostrarCancelar] = useState(false)
+  const [mostrarResolver, setMostrarResolver] = useState(false)
+  const [resolucionForm, setResolucionForm] = useState({ resolucion: '', estadoFinal: 'ADJUDICADA' })
   const [motivoCancelar, setMotivoCancelar] = useState('')
 
   const cargar = () => {
@@ -56,7 +60,11 @@ export default function SubastaDetalle() {
     client.get(`/subastas/${id}/comentarios`).then(r => setComentarios(r.data)).catch(() => {})
   }
 
-  useEffect(() => { cargar() }, [id])
+  useEffect(() => {
+    cargar()
+    const intervalo = setInterval(cargar, 10000)
+    return () => clearInterval(intervalo)
+  }, [id])
 
   const pujar = async (e) => {
     e.preventDefault()
@@ -70,6 +78,20 @@ export default function SubastaDetalle() {
       toast.error(err.response?.data?.error || 'Error al pujar')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const resolverDisputa = async () => {
+    try {
+      const disputas = await client.get(`/disputas/todas`)
+      const disputa = disputas.data.find(d => d.subasta?.id === parseInt(id))
+      if (!disputa) { toast.error('Disputa no encontrada'); return }
+      await client.post(`/disputas/${disputa.id}/resolver`, resolucionForm)
+      toast.success('Disputa resuelta')
+      setMostrarResolver(false)
+      cargar()
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Error al resolver')
     }
   }
 
@@ -106,6 +128,8 @@ export default function SubastaDetalle() {
   const esVendedor = user && subasta.vendedor?.email === user.email
   const esGanador = user && subasta.ganador?.email === user.email
   const puedeDisputar = subasta.estado === 'ADJUDICADA' && (esVendedor || esGanador)
+  const esAdmin = user?.roles?.includes('ADMIN')
+  const puedeResolver = subasta.estado === 'EN_DISPUTA' && esAdmin
   const puedeCancel = esVendedor && (subasta.estado === 'ACTIVA' || subasta.estado === 'PUBLICADA') && todasPujas.length === 0
 
   const anonimizar = (nombre) => nombre ? nombre[0] + '***' : 'Usuario ***'
@@ -192,26 +216,81 @@ export default function SubastaDetalle() {
             {comentarios.length === 0
               ? <p style={{ color: '#888', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>Sé el primero en comentar</p>
               : <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {comentarios.map(c => (
-                    <div key={c.id} style={{ display: 'flex', gap: 10 }}>
-                      <div className="avatar" style={{ width: 34, height: 34, fontSize: 13, flexShrink: 0 }}>{c.usuario?.nombre?.[0]?.toUpperCase()}</div>
-                      <div style={{ flex: 1, background: '#f9f5ff', borderRadius: 10, padding: '10px 14px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div>
-                            <span style={{ fontWeight: 700, fontSize: 13 }}>{c.usuario?.nombre}</span>
-                            <span style={{ color: '#888', fontSize: 11, marginLeft: 8 }}>{formatFecha(c.fecha)}</span>
+                  {comentarios.filter(c => !c.padre).map(c => {
+                    const respuestas = comentarios.filter(r => r.padre?.id === c.id)
+                    return (
+                      <div key={c.id}>
+                        <div style={{ display: 'flex', gap: 10 }}>
+                          <div className="avatar" style={{ width: 34, height: 34, fontSize: 13, flexShrink: 0 }}>{c.usuario?.nombre?.[0]?.toUpperCase()}</div>
+                          <div style={{ flex: 1, background: '#e8eaf6', borderRadius: 10, padding: '10px 14px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <div>
+                                <span style={{ fontWeight: 700, fontSize: 13 }}>{c.usuario?.nombre}</span>
+                                <span style={{ color: '#888', fontSize: 11, marginLeft: 8 }}>{formatFecha(c.fecha)}</span>
+                              </div>
+                              <button onClick={async () => {
+                                await client.delete(`/subastas/${id}/comentarios/${c.id}`)
+                                client.get(`/subastas/${id}/comentarios`).then(r => setComentarios(r.data))
+                              }} style={{ background: 'none', border: 'none', color: '#ccc', cursor: 'pointer', padding: 0 }}>
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                            <p style={{ fontSize: 13, color: '#444', marginTop: 4 }}>{c.texto}</p>
+                            <button onClick={() => { setRespondiendo(respondiendo === c.id ? null : c.id); setTextoRespuesta('') }}
+                              style={{ background: 'none', border: 'none', color: '#2A398D', cursor: 'pointer', fontSize: 12, fontWeight: 600, padding: 0, marginTop: 6 }}>
+                              Responder
+                            </button>
                           </div>
-                          <button onClick={async () => {
-                            await client.delete(`/subastas/${id}/comentarios/${c.id}`)
-                            client.get(`/subastas/${id}/comentarios`).then(r => setComentarios(r.data))
-                          }} style={{ background: 'none', border: 'none', color: '#ccc', cursor: 'pointer', padding: 0 }}>
-                            <Trash2 size={13} />
-                          </button>
                         </div>
-                        <p style={{ fontSize: 13, color: '#444', marginTop: 4 }}>{c.texto}</p>
+
+                        {respondiendo === c.id && (
+                          <div style={{ marginLeft: 44, marginTop: 8 }}>
+                            <form onSubmit={async (e) => {
+                              e.preventDefault()
+                              if (!textoRespuesta.trim()) return
+                              try {
+                                await client.post(`/subastas/${id}/comentarios`, { texto: textoRespuesta, padreId: c.id })
+                                setTextoRespuesta('')
+                                setRespondiendo(null)
+                                client.get(`/subastas/${id}/comentarios`).then(r => setComentarios(r.data))
+                              } catch { toast.error('Error') }
+                            }} style={{ display: 'flex', gap: 8 }}>
+                              <input className="input" value={textoRespuesta} onChange={e => setTextoRespuesta(e.target.value)}
+                                placeholder={`Responder a ${c.usuario?.nombre}...`} style={{ flex: 1, fontSize: 13 }} />
+                              <button className="btn btn-primary" type="submit" style={{ borderRadius: 8, padding: '0 12px', fontSize: 12 }}>
+                                <Send size={13} />
+                              </button>
+                            </form>
+                          </div>
+                        )}
+
+                        {respuestas.length > 0 && (
+                          <div style={{ marginLeft: 44, marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {respuestas.map(r => (
+                              <div key={r.id} style={{ display: 'flex', gap: 8 }}>
+                                <div className="avatar" style={{ width: 28, height: 28, fontSize: 11, flexShrink: 0 }}>{r.usuario?.nombre?.[0]?.toUpperCase()}</div>
+                                <div style={{ flex: 1, background: '#e8eaf6', borderRadius: 8, padding: '8px 12px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <div>
+                                      <span style={{ fontWeight: 700, fontSize: 12 }}>{r.usuario?.nombre}</span>
+                                      <span style={{ color: '#888', fontSize: 10, marginLeft: 6 }}>{formatFecha(r.fecha)}</span>
+                                    </div>
+                                    <button onClick={async () => {
+                                      await client.delete(`/subastas/${id}/comentarios/${r.id}`)
+                                      client.get(`/subastas/${id}/comentarios`).then(res => setComentarios(res.data))
+                                    }} style={{ background: 'none', border: 'none', color: '#ccc', cursor: 'pointer', padding: 0 }}>
+                                      <Trash2 size={11} />
+                                    </button>
+                                  </div>
+                                  <p style={{ fontSize: 12, color: '#444', marginTop: 3 }}>{r.texto}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
             }
           </div>
@@ -221,15 +300,15 @@ export default function SubastaDetalle() {
           <div className="card" style={{ padding: 22 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
               <h1 style={{ fontSize: 17, fontWeight: 800, flex: 1, paddingRight: 10, lineHeight: 1.3 }}>{subasta.producto?.titulo}</h1>
-              <span className={`badge ${estadoBadge}`}>{subasta.estado}</span>
+              <span className={`badge ${estadoBadge}`}>{subasta.estado === 'EN_DISPUTA' ? 'En disputa' : subasta.estado}</span>
             </div>
 
-            <div style={{ background: '#f9f5ff', borderRadius: 10, padding: 16, marginBottom: 16 }}>
+            <div style={{ background: '#e8eaf6', borderRadius: 10, padding: 16, marginBottom: 16 }}>
               <p style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Precio base</p>
               <p style={{ fontSize: 15, fontWeight: 600, color: '#555', marginBottom: 12 }}>${subasta.precioBase?.toLocaleString('es-AR')}</p>
               <p style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Oferta actual</p>
-              <p style={{ fontSize: 30, fontWeight: 800, color: '#7c3aed', marginBottom: 4 }}>${subasta.montoActual?.toLocaleString('es-AR')}</p>
-              <p style={{ fontSize: 12, color: '#888' }}>{todasPujas.length} ofertas realizadas</p>
+              <p style={{ fontSize: 30, fontWeight: 800, color: '#2A398D', marginBottom: 4 }}>${subasta.montoActual?.toLocaleString('es-AR')}</p>
+              <p style={{ fontSize: 12, color: '#888' }}>{todasPujas.length || misPujas.length} ofertas realizadas</p>
             </div>
 
             {subasta.estado === 'ACTIVA' && (
@@ -273,6 +352,13 @@ export default function SubastaDetalle() {
               </div>
             )}
 
+            {puedeResolver && (
+              <button onClick={() => setMostrarResolver(true)} className="btn btn-block"
+                style={{ borderRadius: 8, background: '#2A398D', color: 'white', marginTop: 8 }}>
+                Resolver disputa
+              </button>
+            )}
+
             {puedeCancel && (
               <button onClick={() => setMostrarCancelar(true)} className="btn btn-block"
                 style={{ borderRadius: 8, background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', marginTop: 12 }}>
@@ -301,6 +387,38 @@ export default function SubastaDetalle() {
           )}
         </div>
       </div>
+
+      {mostrarResolver && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="card" style={{ padding: 28, width: '100%', maxWidth: 460, position: 'relative' }}>
+            <button onClick={() => setMostrarResolver(false)} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', cursor: 'pointer', color: '#888' }}>
+              <X size={20} />
+            </button>
+            <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>Resolver disputa</h2>
+            <p style={{ fontSize: 13, color: '#666', marginBottom: 20 }}>{subasta.producto?.titulo}</p>
+            <div className="field">
+              <label className="label">Resolución</label>
+              <textarea className="input" value={resolucionForm.resolucion}
+                onChange={e => setResolucionForm({ ...resolucionForm, resolucion: e.target.value })}
+                rows={3} placeholder="Describí la resolución..." style={{ resize: 'vertical' }} />
+            </div>
+            <div className="field">
+              <label className="label">Estado final de la subasta</label>
+              <select className="input" value={resolucionForm.estadoFinal}
+                onChange={e => setResolucionForm({ ...resolucionForm, estadoFinal: e.target.value })}>
+                <option value="ADJUDICADA">Adjudicada (mantener ganador)</option>
+                <option value="FINALIZADA">Finalizada (sin ganador)</option>
+                <option value="CANCELADA">Cancelada</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+              <button onClick={() => setMostrarResolver(false)} className="btn btn-secondary" style={{ flex: 1, borderRadius: 8 }}>Cancelar</button>
+              <button onClick={resolverDisputa} className="btn btn-primary" style={{ flex: 1, borderRadius: 8 }}
+                disabled={!resolucionForm.resolucion.trim()}>Confirmar</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {mostrarCancelar && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>

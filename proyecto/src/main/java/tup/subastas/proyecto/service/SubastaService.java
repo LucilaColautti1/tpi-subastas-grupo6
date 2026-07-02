@@ -25,7 +25,7 @@ public class SubastaService {
     private final NotificacionRepository notificacionRepository;
     private final EmailService emailService;
 
-    @Scheduled(fixedDelay = 60000)
+    @Scheduled(fixedDelay = 10000)
     @Transactional
     public void procesarSubastas() {
         LocalDateTime ahora = LocalDateTime.now(ZoneOffset.UTC);

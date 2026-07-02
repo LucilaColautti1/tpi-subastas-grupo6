@@ -68,6 +68,12 @@ export default function AdminPanel() {
     { key: 'disputas', label: `Disputas (${disputas.length})`, icon: <AlertTriangle size={15} /> },
   ]
 
+  const estadoLabel = (e) => ({
+    ACTIVA: 'Activa', PUBLICADA: 'Publicada', BORRADOR: 'Borrador',
+    ADJUDICADA: 'Adjudicada', FINALIZADA: 'Finalizada',
+    CANCELADA: 'Cancelada', EN_DISPUTA: 'En disputa'
+  }[e] || e)
+
   const estadoBadge = (e) => ({
     ACTIVA: 'badge-green', ADJUDICADA: 'badge-purple', FINALIZADA: 'badge-gray',
     CANCELADA: 'badge-red', PUBLICADA: 'badge-orange', EN_DISPUTA: 'badge-orange'
@@ -86,7 +92,7 @@ export default function AdminPanel() {
             <button key={t.key} onClick={() => setTab(t.key)} style={{
               width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', border: 'none',
               borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: tab === t.key ? 600 : 400,
-              background: tab === t.key ? '#f0ebff' : 'none', color: tab === t.key ? '#7c3aed' : '#555',
+              background: tab === t.key ? '#e8eaf6' : 'none', color: tab === t.key ? '#2A398D' : '#555',
               marginBottom: 2, textAlign: 'left'
             }}>
               {t.icon} {t.label}
@@ -99,7 +105,7 @@ export default function AdminPanel() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
                 {[
-                  { label: 'Usuarios activos', value: usuarios.filter(u => !u.bloqueado).length, color: '#7c3aed' },
+                  { label: 'Usuarios activos', value: usuarios.filter(u => !u.bloqueado).length, color: '#2A398D' },
                   { label: 'Subastas activas', value: subastas.filter(s => s.estado === 'ACTIVA').length, color: '#16a34a' },
                   { label: 'Disputas pendientes', value: disputas.filter(d => !d.resolucionAdmin).length, color: '#ea580c' },
                   { label: 'Total subastas', value: subastas.length, color: '#2563eb' },
@@ -125,7 +131,7 @@ export default function AdminPanel() {
                       <tr key={s.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
                         <td style={{ padding: '10px 12px', fontWeight: 600, fontSize: 13 }}>{s.producto?.titulo}</td>
                         <td style={{ padding: '10px 12px', color: '#666', fontSize: 13 }}>{s.vendedor?.nombre}</td>
-                        <td style={{ padding: '10px 12px' }}><span className={`badge ${estadoBadge(s.estado)}`}>{s.estado}</span></td>
+                        <td style={{ padding: '10px 12px' }}><span className={`badge ${estadoBadge(s.estado)}`}>{estadoLabel(s.estado)}</span></td>
                         <td style={{ padding: '10px 12px', fontWeight: 700, fontSize: 13 }}>${s.montoActual?.toLocaleString('es-AR')}</td>
                         <td style={{ padding: '10px 12px', color: '#666', fontSize: 12 }}>{new Date(s.fechaCierre).toLocaleDateString('es-AR')}</td>
                       </tr>
@@ -158,7 +164,18 @@ export default function AdminPanel() {
                       <td style={{ padding: '10px 12px', color: '#666', fontSize: 13 }}>{u.email}</td>
                       <td style={{ padding: '10px 12px' }}>
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                          {u.roles?.map(r => <span key={r.id} className="badge badge-purple">{r.nombre}</span>)}
+                          {u.roles?.map(r => (
+                            <span key={r.id} className="badge badge-purple" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              {r.nombre}
+                              <button onClick={async () => {
+                                try {
+                                  await client.delete(`/admin/usuarios/${u.id}/rol?rol=${r.nombre}`)
+                                  toast.success('Rol removido')
+                                  cargar()
+                                } catch { toast.error('Error') }
+                              }} style={{ background: 'none', border: 'none', color: '#2A398D', cursor: 'pointer', padding: 0, fontSize: 14, fontWeight: 700, lineHeight: 1 }}>×</button>
+                            </span>
+                          ))}
                         </div>
                       </td>
                       <td style={{ padding: '10px 12px' }}>

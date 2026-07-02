@@ -18,6 +18,13 @@ function PrivateRoute({ children }) {
   return token ? children : <Navigate to="/login" />
 }
 
+function AdminRoute({ children }) {
+  const { token, user } = useAuth()
+  if (!token) return <Navigate to="/login" />
+  if (!user?.roles?.includes('ADMIN')) return <Navigate to="/" />
+  return children
+}
+
 export default function App() {
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f5' }}>
@@ -33,7 +40,7 @@ export default function App() {
         <Route path="/crear-subasta" element={<PrivateRoute><CrearSubasta /></PrivateRoute>} />
         <Route path="/mis-pujas" element={<PrivateRoute><MisPujas /></PrivateRoute>} />
         <Route path="/mis-disputas" element={<PrivateRoute><MisDisputas /></PrivateRoute>} />
-        <Route path="/admin" element={<PrivateRoute><AdminPanel /></PrivateRoute>} />
+        <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
       </Routes>
     </div>
   )

@@ -10,7 +10,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (token) {
       const payload = JSON.parse(atob(token.split('.')[1]))
-      setUser({ email: payload.sub })
+      setUser({ email: payload.sub, nombre: payload.nombre, roles: payload.roles || [] })
     }
   }, [token])
 

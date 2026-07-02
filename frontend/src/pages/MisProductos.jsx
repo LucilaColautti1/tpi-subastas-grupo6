@@ -51,10 +51,11 @@ export default function MisProductos() {
     e.preventDefault()
     setLoading(true)
     try {
-      await client.post('/productos', { ...form, categoriaId: parseInt(form.categoriaId) })
+      await client.post('/productos', { titulo: form.titulo, descripcion: form.descripcion || null, categoriaId: parseInt(form.categoriaId), imagenBase64: form.imagenBase64 || null })
       toast.success('Producto creado')
       setForm({ titulo: '', descripcion: '', categoriaId: '', imagenBase64: '' })
       setPreview(null)
+      if (fileRef.current) fileRef.current.value = ''
       cargar()
     } catch (err) {
       toast.error(err.response?.data?.error || 'Error')
@@ -109,7 +110,7 @@ export default function MisProductos() {
               onDragOver={e => { e.preventDefault(); setDragOver(true) }}
               onDragLeave={() => setDragOver(false)}
               onDrop={e => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]) }}
-              style={{ border: `2px dashed ${dragOver ? '#7c3aed' : '#ddd'}`, borderRadius: 10, height: 180, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginBottom: 16, background: dragOver ? '#f9f5ff' : '#fafafa', overflow: 'hidden', transition: 'all 0.2s' }}>
+              style={{ border: `2px dashed ${dragOver ? '#2A398D' : '#ddd'}`, borderRadius: 10, height: 180, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginBottom: 16, background: dragOver ? '#e8eaf6' : '#fafafa', overflow: 'hidden', transition: 'all 0.2s' }}>
               {preview
                 ? <img src={preview} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : <>

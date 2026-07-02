@@ -36,7 +36,12 @@ export default function MisPujas() {
 
   const filtradas = tab === 'todas' ? subastas : subastas.filter(s => s.estado === tab)
 
-  const estadoBadge = (e) => ({ ACTIVA: 'badge-green', ADJUDICADA: 'badge-purple', FINALIZADA: 'badge-gray', CANCELADA: 'badge-red' }[e] || 'badge-gray')
+  const estadoBadge = (e) => ({ ACTIVA: 'badge-green', ADJUDICADA: 'badge-purple', FINALIZADA: 'badge-gray', CANCELADA: 'badge-red', EN_DISPUTA: 'badge-orange' }[e] || 'badge-gray')
+
+  const estadoLabel = (e) => ({
+    ACTIVA: 'Activa', PUBLICADA: 'Publicada', ADJUDICADA: 'Adjudicada',
+    FINALIZADA: 'Finalizada', CANCELADA: 'Cancelada', EN_DISPUTA: 'En disputa'
+  }[e] || e)
 
   return (
     <div className="page">
@@ -51,8 +56,8 @@ export default function MisPujas() {
             <button key={t.key} onClick={() => setTab(t.key)} style={{
               padding: '14px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14,
               fontWeight: tab === t.key ? 700 : 400,
-              color: tab === t.key ? '#7c3aed' : '#666',
-              borderBottom: tab === t.key ? '2px solid #7c3aed' : '2px solid transparent',
+              color: tab === t.key ? '#2A398D' : '#666',
+              borderBottom: tab === t.key ? '2px solid #2A398D' : '2px solid transparent',
               marginBottom: -1
             }}>{t.label}</button>
           ))}
@@ -64,7 +69,7 @@ export default function MisPujas() {
             : filtradas.map(s => (
                 <Link key={s.id} to={`/subastas/${s.id}`}>
                   <div style={{ display: 'flex', gap: 14, padding: '14px 0', borderBottom: '1px solid #f0f0f0', cursor: 'pointer' }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#f9f5ff'}
+                    onMouseEnter={e => e.currentTarget.style.background = '#e8eaf6'}
                     onMouseLeave={e => e.currentTarget.style.background = 'none'}
                   >
                     <div style={{ width: 72, height: 72, background: '#f5f5f5', borderRadius: 8, flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -80,7 +85,7 @@ export default function MisPujas() {
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <p style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Oferta actual</p>
                       <p style={{ fontWeight: 800, fontSize: 20, marginBottom: 6 }}>${s.montoActual?.toLocaleString('es-AR')}</p>
-                      <span className={`badge ${estadoBadge(s.estado)}`}>{s.estado}</span>
+                      <span className={`badge ${estadoBadge(s.estado)}`}>{estadoLabel(s.estado)}</span>
                     </div>
                   </div>
                 </Link>

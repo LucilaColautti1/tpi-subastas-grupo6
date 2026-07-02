@@ -14,13 +14,9 @@ a { text-decoration: none; color: inherit; }
 input, select, textarea, button { font-family: inherit; font-size: 14px; }
 button { cursor: pointer; }
 
-/* Layout */
 .page { max-width: 1280px; margin: 0 auto; padding: 20px 16px; }
-
-/* Cards */
 .card { background: white; border: 1px solid #e8e8e8; border-radius: 12px; }
 
-/* Inputs */
 .input {
   width: 100%;
   border: 1.5px solid #ddd;
@@ -31,12 +27,11 @@ button { cursor: pointer; }
   background: white;
   color: #1a1a1a;
 }
-.input:focus { border-color: #7c3aed; }
+.input:focus { border-color: #2A398D; }
 
 .label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 5px; color: #444; }
 .field { margin-bottom: 16px; }
 
-/* Buttons */
 .btn {
   border: none;
   border-radius: 8px;
@@ -49,41 +44,38 @@ button { cursor: pointer; }
   align-items: center;
   gap: 6px;
 }
-.btn-primary { background: #7c3aed; color: white; }
-.btn-primary:hover { background: #6d28d9; }
-.btn-secondary { background: #f0ebff; color: #7c3aed; }
-.btn-secondary:hover { background: #e5d8ff; }
-.btn-outline { background: white; color: #7c3aed; border: 1.5px solid #7c3aed; }
-.btn-outline:hover { background: #f0ebff; }
-.btn-danger { background: #fee2e2; color: #dc2626; }
+.btn-primary { background: #2A398D; color: white; }
+.btn-primary:hover { background: #1e2a6b; }
+.btn-secondary { background: #e8eaf6; color: #2A398D; }
+.btn-secondary:hover { background: #d5d9ef; }
+.btn-outline { background: white; color: #2A398D; border: 1.5px solid #2A398D; }
+.btn-outline:hover { background: #e8eaf6; }
+.btn-danger { background: #fee2e2; color: #E61D25; }
 .btn-danger:hover { background: #fecaca; }
+.btn-green { background: #3CAC3B; color: white; }
+.btn-green:hover { background: #2e8a2d; }
 .btn-block { width: 100%; justify-content: center; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Badges */
 .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-.badge-green { background: #dcfce7; color: #16a34a; }
-.badge-purple { background: #f0ebff; color: #7c3aed; }
-.badge-red { background: #fee2e2; color: #dc2626; }
-.badge-gray { background: #f0f0f0; color: #666; }
+.badge-green { background: #dcfce7; color: #3CAC3B; }
+.badge-purple { background: #e8eaf6; color: #2A398D; }
+.badge-red { background: #fee2e2; color: #E61D25; }
+.badge-gray { background: #f0f0f0; color: #474A4A; }
 .badge-orange { background: #fff7ed; color: #ea580c; }
-.badge-blue { background: #dbeafe; color: #2563eb; }
+.badge-blue { background: #dbeafe; color: #2A398D; }
 
-/* Divider */
 .divider { border: none; border-top: 1px solid #eee; margin: 16px 0; }
 
-/* Avatar */
 .avatar {
   width: 36px; height: 36px; border-radius: 50%;
-  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  background: linear-gradient(135deg, #2A398D, #3CAC3B);
   display: flex; align-items: center; justify-content: center;
   color: white; font-weight: 700; font-size: 14px; flex-shrink: 0;
 }
 
-/* Countdown */
-.countdown { color: #dc2626; font-weight: 700; font-family: 'Courier New', monospace; }
+.countdown { color: #E61D25; font-weight: 700; font-family: 'Courier New', monospace; }
 
-/* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #f5f5f5; }
 ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }

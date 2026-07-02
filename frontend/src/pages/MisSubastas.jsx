@@ -27,7 +27,7 @@ const estadoBadge = (e) => ({
 
 function toLocalDatetime(utcStr) {
   if (!utcStr) return ''
-  const d = new Date(utcStr)
+  const d = new Date(utcStr + 'Z')
   const pad = n => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
@@ -46,7 +46,11 @@ export default function MisSubastas() {
     client.get('/subastas/mis-subastas').then(r => setSubastas(r.data)).finally(() => setLoading(false))
   }
 
-  useEffect(() => { cargar() }, [])
+  useEffect(() => {
+    cargar()
+    const intervalo = setInterval(cargar, 10000)
+    return () => clearInterval(intervalo)
+  }, [])
 
   const abrirEdicion = (s) => {
     setEditando(s)
@@ -99,6 +103,12 @@ export default function MisSubastas() {
     { key: 'CANCELADA', label: 'Canceladas' },
   ]
 
+  const estadoLabel = (e) => ({
+    ACTIVA: 'Activa', PUBLICADA: 'Publicada', BORRADOR: 'Borrador',
+    ADJUDICADA: 'Adjudicada', FINALIZADA: 'Finalizada',
+    CANCELADA: 'Cancelada', EN_DISPUTA: 'En disputa'
+  }[e] || e)
+
   const filtradas = tab === 'todas' ? subastas : subastas.filter(s => s.estado === tab)
 
   return (
@@ -117,8 +127,8 @@ export default function MisSubastas() {
             <button key={t.key} onClick={() => setTab(t.key)} style={{
               padding: '12px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, whiteSpace: 'nowrap',
               fontWeight: tab === t.key ? 700 : 400,
-              color: tab === t.key ? '#7c3aed' : '#666',
-              borderBottom: tab === t.key ? '2px solid #7c3aed' : '2px solid transparent',
+              color: tab === t.key ? '#2A398D' : '#666',
+              borderBottom: tab === t.key ? '2px solid #2A398D' : '2px solid transparent',
               marginBottom: -1
             }}>{t.label}</button>
           ))}
@@ -130,7 +140,7 @@ export default function MisSubastas() {
           ) : filtradas.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 48, color: '#888' }}>
               <p style={{ marginBottom: 8 }}>No tenés subastas en esta categoría</p>
-              <Link to="/crear-subasta" style={{ color: '#7c3aed', fontWeight: 600 }}>Crear una subasta</Link>
+              <Link to="/crear-subasta" style={{ color: '#2A398D', fontWeight: 600 }}>Crear una subasta</Link>
             </div>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -159,7 +169,7 @@ export default function MisSubastas() {
                       </div>
                     </td>
                     <td style={{ padding: '12px' }}>
-                      <span className={`badge ${estadoBadge(s.estado)}`}>{s.estado}</span>
+                      <span className={`badge ${estadoBadge(s.estado)}`}>{estadoLabel(s.estado)}</span>
                     </td>
                     <td style={{ padding: '12px', fontWeight: 700, fontSize: 14 }}>${s.montoActual?.toLocaleString('es-AR')}</td>
                     <td style={{ padding: '12px', color: '#666', fontSize: 13 }}>${s.precioBase?.toLocaleString('es-AR')}</td>
@@ -172,7 +182,8 @@ export default function MisSubastas() {
                     </td>
                     <td style={{ padding: '12px' }}>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <Link to={`/subastas/${s.id}`} style={{ color: '#7c3aed', fontWeight: 600, fontSize: 13 }}>Ver</Link>
+                        <Link to={`/subastas/${s.id}`} style={{ color: '#2A398D', fontWeight: 600, fontSize: 13 }}>Ver</Link>
+
                         {(s.estado === 'BORRADOR' || s.estado === 'PUBLICADA' || s.estado === 'ACTIVA') && s.estado !== 'CANCELADA' && s.estado !== 'FINALIZADA' && s.estado !== 'ADJUDICADA' && (
                           <button onClick={() => { setCancelando(s); setMotivoCancelacion('') }}
                             style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -181,7 +192,7 @@ export default function MisSubastas() {
                         )}
                         {(s.estado === 'BORRADOR' || s.estado === 'PUBLICADA') && (
                           <button onClick={() => abrirEdicion(s)}
-                            style={{ background: 'none', border: 'none', color: '#7c3aed', cursor: 'pointer', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                            style={{ background: 'none', border: 'none', color: '#2A398D', cursor: 'pointer', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
                             <Pencil size={13} /> Editar
                           </button>
                         )}
@@ -233,6 +244,34 @@ export default function MisSubastas() {
               </button>
               <button onClick={guardarEdicion} className="btn btn-primary" disabled={loadingEdit} style={{ flex: 1, borderRadius: 8 }}>
                 {loadingEdit ? 'Guardando...' : 'Guardar cambios'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal cancelación */}
+      {cancelando && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="card" style={{ padding: 28, width: '100%', maxWidth: 440, position: 'relative' }}>
+            <button onClick={() => setCancelando(null)}
+              style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', cursor: 'pointer', color: '#888' }}>
+              <X size={20} />
+            </button>
+            <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>Cancelar subasta</h2>
+            <p style={{ fontSize: 13, color: '#666', marginBottom: 20 }}>{cancelando.producto?.titulo}</p>
+            <div className="field">
+              <label className="label">Motivo de la cancelación</label>
+              <textarea className="input" value={motivoCancelacion}
+                onChange={e => setMotivoCancelacion(e.target.value)}
+                rows={3} placeholder="Indicá el motivo..." style={{ resize: 'vertical' }} />
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+              <button onClick={() => setCancelando(null)} className="btn btn-secondary" style={{ flex: 1, borderRadius: 8 }}>
+                Volver
+              </button>
+              <button onClick={cancelar} className="btn btn-danger" disabled={!motivoCancelacion.trim()} style={{ flex: 1, borderRadius: 8 }}>
+                Confirmar cancelación
               </button>
             </div>
           </div>

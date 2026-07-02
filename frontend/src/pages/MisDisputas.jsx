@@ -53,7 +53,7 @@ export default function MisDisputas() {
                   <p style={{ fontSize: 13, color: '#555' }}>{d.resolucionAdmin}</p>
                 </div>
               )}
-              <Link to={`/subastas/${d.subasta?.id}`} style={{ display: 'inline-block', marginTop: 12, color: '#7c3aed', fontSize: 13, fontWeight: 600 }}>
+              <Link to={`/subastas/${d.subasta?.id}`} style={{ display: 'inline-block', marginTop: 12, color: '#2A398D', fontSize: 13, fontWeight: 600 }}>
                 Ver subasta →
               </Link>
             </div>

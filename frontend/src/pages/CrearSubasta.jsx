@@ -34,6 +34,30 @@ export default function CrearSubasta() {
     }
   }
 
+  const guardarBorrador = async () => {
+    if (!form.productoId || !form.precioBase || !form.incrementoMinimo || !form.fechaInicio || !form.fechaCierre) {
+      toast.error('Completá todos los campos')
+      return
+    }
+    setLoading(true)
+    try {
+      await client.post('/subastas/seller', {
+        ...form,
+        productoId: parseInt(form.productoId),
+        precioBase: parseFloat(form.precioBase),
+        incrementoMinimo: parseFloat(form.incrementoMinimo),
+        fechaInicio: new Date(form.fechaInicio).toISOString().slice(0, 19),
+        fechaCierre: new Date(form.fechaCierre).toISOString().slice(0, 19),
+      })
+      toast.success('Borrador guardado')
+      navigate('/mis-subastas')
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Error al guardar borrador')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const productoSeleccionado = productos.find(p => p.id === parseInt(form.productoId))
 
   return (
@@ -54,8 +78,8 @@ export default function CrearSubasta() {
                 {productos.map(p => <option key={p.id} value={p.id}>{p.titulo}</option>)}
               </select>
               {productos.length === 0 && (
-                <p style={{ fontSize: 12, color: '#7c3aed', marginTop: 4 }}>
-                  <Link to="/mis-productos" style={{ color: '#7c3aed' }}>+ Primero creá un producto</Link>
+                <p style={{ fontSize: 12, color: '#2A398D', marginTop: 4 }}>
+                  <Link to="/mis-productos" style={{ color: '#2A398D' }}>+ Primero creá un producto</Link>
                 </p>
               )}
             </div>
@@ -81,7 +105,7 @@ export default function CrearSubasta() {
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-              <button type="button" className="btn btn-outline btn-block" style={{ borderRadius: 8 }}>
+              <button type="button" onClick={guardarBorrador} disabled={loading} className="btn btn-outline btn-block" style={{ borderRadius: 8 }}>
                 Guardar borrador
               </button>
               <button className="btn btn-primary btn-block" type="submit" disabled={loading} style={{ borderRadius: 8 }}>
@@ -103,12 +127,12 @@ export default function CrearSubasta() {
                   }
                 </div>
                 <p style={{ fontWeight: 700, fontSize: 15 }}>{productoSeleccionado.titulo}</p>
-                <p style={{ fontSize: 12, color: '#7c3aed', marginTop: 4 }}>{productoSeleccionado.categoria?.nombre}</p>
+                <p style={{ fontSize: 12, color: '#2A398D', marginTop: 4 }}>{productoSeleccionado.categoria?.nombre}</p>
                 <p style={{ fontSize: 13, color: '#555', marginTop: 6 }}>{productoSeleccionado.descripcion}</p>
                 {form.precioBase && (
-                  <div style={{ marginTop: 12, padding: 12, background: '#f9f5ff', borderRadius: 8 }}>
+                  <div style={{ marginTop: 12, padding: 12, background: '#e8eaf6', borderRadius: 8 }}>
                     <p style={{ fontSize: 12, color: '#888' }}>Precio base</p>
-                    <p style={{ fontSize: 22, fontWeight: 800, color: '#7c3aed' }}>${parseFloat(form.precioBase || 0).toLocaleString('es-AR')}</p>
+                    <p style={{ fontSize: 22, fontWeight: 800, color: '#2A398D' }}>${parseFloat(form.precioBase || 0).toLocaleString('es-AR')}</p>
                   </div>
                 )}
               </div>

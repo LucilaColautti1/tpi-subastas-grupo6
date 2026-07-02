@@ -28,7 +28,7 @@ export default function Register() {
     <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f7f7f7' }}>
       <div style={{ background: 'white', border: '1px solid #ddd', borderRadius: 8, padding: 40, width: '100%', maxWidth: 420, boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
         <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 6 }}>Crear cuenta</h1>
-        <p style={{ color: '#666', marginBottom: 24, fontSize: 14 }}>Uníte a SubasticaAR</p>
+        <p style={{ color: '#666', marginBottom: 24, fontSize: 14 }}>Uníte a LaCasacaSubastas</p>
         <form onSubmit={handleSubmit}>
           {[
             { label: 'Nombre', key: 'nombre', type: 'text', placeholder: 'Tu nombre completo' },

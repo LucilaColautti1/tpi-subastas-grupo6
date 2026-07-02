@@ -46,9 +46,14 @@ export default function Busqueda() {
   const [precioMax, setPrecioMax] = useState('')
 
   useEffect(() => {
-    Promise.all([client.get('/subastas/publicas'), client.get('/categorias')])
-      .then(([s, c]) => { setSubastas(s.data); setCategorias(c.data) })
-      .finally(() => setLoading(false))
+    const cargar = () => {
+      Promise.all([client.get('/subastas/publicas'), client.get('/categorias')])
+        .then(([s, c]) => { setSubastas(s.data); setCategorias(c.data) })
+        .finally(() => setLoading(false))
+    }
+    cargar()
+    const intervalo = setInterval(cargar, 10000)
+    return () => clearInterval(intervalo)
   }, [])
 
   useEffect(() => {
@@ -112,7 +117,7 @@ export default function Busqueda() {
             const cat = categorias.find(c => c.id === id)
             return (
               <span key={id} onClick={() => toggleCat(id)}
-                style={{ background: '#f0ebff', color: '#7c3aed', padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                style={{ background: '#e8eaf6', color: '#2A398D', padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                 {cat?.nombre} <X size={12} />
               </span>
             )
@@ -121,7 +126,7 @@ export default function Busqueda() {
             const estado = ESTADOS.find(e => e.value === v)
             return (
               <span key={v} onClick={() => toggleEstado(v)}
-                style={{ background: '#f0ebff', color: '#7c3aed', padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                style={{ background: '#e8eaf6', color: '#2A398D', padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                 {estado?.label} <X size={12} />
               </span>
             )
@@ -137,17 +142,17 @@ export default function Busqueda() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <p style={{ fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
               <SlidersHorizontal size={14} /> Filtros
-              {filtrosActivos > 0 && <span style={{ background: '#7c3aed', color: 'white', borderRadius: '50%', width: 18, height: 18, fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{filtrosActivos}</span>}
+              {filtrosActivos > 0 && <span style={{ background: '#2A398D', color: 'white', borderRadius: '50%', width: 18, height: 18, fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{filtrosActivos}</span>}
             </p>
-            {filtrosActivos > 0 && <button onClick={limpiar} style={{ background: 'none', border: 'none', color: '#7c3aed', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>Limpiar</button>}
+            {filtrosActivos > 0 && <button onClick={limpiar} style={{ background: 'none', border: 'none', color: '#2A398D', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>Limpiar</button>}
           </div>
 
           <div style={{ marginBottom: 16 }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Categoría</p>
             {categorias.map(c => (
               <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '4px 0' }}>
-                <input type="checkbox" checked={catsSeleccionadas.includes(c.id)} onChange={() => toggleCat(c.id)} style={{ accentColor: '#7c3aed', width: 15, height: 15 }} />
-                <span style={{ fontSize: 13, color: catsSeleccionadas.includes(c.id) ? '#7c3aed' : '#444', fontWeight: catsSeleccionadas.includes(c.id) ? 600 : 400 }}>{c.nombre}</span>
+                <input type="checkbox" checked={catsSeleccionadas.includes(c.id)} onChange={() => toggleCat(c.id)} style={{ accentColor: '#2A398D', width: 15, height: 15 }} />
+                <span style={{ fontSize: 13, color: catsSeleccionadas.includes(c.id) ? '#2A398D' : '#444', fontWeight: catsSeleccionadas.includes(c.id) ? 600 : 400 }}>{c.nombre}</span>
               </label>
             ))}
           </div>
@@ -158,7 +163,7 @@ export default function Busqueda() {
             <p style={{ fontSize: 12, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Estado</p>
             {ESTADOS.map(e => (
               <label key={e.value} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '4px 0' }}>
-                <input type="checkbox" checked={estadosSeleccionados.includes(e.value)} onChange={() => toggleEstado(e.value)} style={{ accentColor: '#7c3aed', width: 15, height: 15 }} />
+                <input type="checkbox" checked={estadosSeleccionados.includes(e.value)} onChange={() => toggleEstado(e.value)} style={{ accentColor: '#2A398D', width: 15, height: 15 }} />
                 <span className={`badge ${estadoBadge(e.value)}`}>{e.label}</span>
               </label>
             ))}
@@ -185,8 +190,8 @@ export default function Busqueda() {
               { v: 'cierre', l: 'Próximo a cerrar' },
             ].map(o => (
               <label key={o.v} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '4px 0' }}>
-                <input type="radio" name="orden" checked={ordenar === o.v} onChange={() => setOrdenar(o.v)} style={{ accentColor: '#7c3aed' }} />
-                <span style={{ fontSize: 13, color: ordenar === o.v ? '#7c3aed' : '#444', fontWeight: ordenar === o.v ? 600 : 400 }}>{o.l}</span>
+                <input type="radio" name="orden" checked={ordenar === o.v} onChange={() => setOrdenar(o.v)} style={{ accentColor: '#2A398D' }} />
+                <span style={{ fontSize: 13, color: ordenar === o.v ? '#2A398D' : '#444', fontWeight: ordenar === o.v ? 600 : 400 }}>{o.l}</span>
               </label>
             ))}
           </div>
@@ -215,7 +220,7 @@ export default function Busqueda() {
                     borderRadius: i === 0 ? '8px 8px 0 0' : i === filtradas.length - 1 ? '0 0 8px 8px' : 0,
                     display: 'flex', gap: 16, padding: 16, cursor: 'pointer'
                   }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#f9f5ff'}
+                    onMouseEnter={e => e.currentTarget.style.background = '#e8eaf6'}
                     onMouseLeave={e => e.currentTarget.style.background = 'white'}
                   >
                     <div style={{ width: 130, height: 100, flexShrink: 0, background: '#f5f5f5', borderRadius: 8, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -226,7 +231,7 @@ export default function Busqueda() {
                     </div>
                     <div style={{ flex: 1 }}>
                       <p style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{s.producto?.titulo}</p>
-                      <p style={{ fontSize: 12, color: '#7c3aed', marginBottom: 6 }}>{s.producto?.categoria?.nombre}</p>
+                      <p style={{ fontSize: 12, color: '#2A398D', marginBottom: 6 }}>{s.producto?.categoria?.nombre}</p>
                       <p style={{ fontSize: 12, color: '#888', marginBottom: 10 }}>{s.producto?.descripcion}</p>
                       <div style={{ display: 'flex', gap: 20 }}>
                         <div>
@@ -237,10 +242,12 @@ export default function Busqueda() {
                           <p style={{ fontSize: 11, color: '#888' }}>Precio base</p>
                           <p style={{ fontSize: 14, color: '#555' }}>${s.precioBase?.toLocaleString('es-AR')}</p>
                         </div>
-                        <div>
-                          <p style={{ fontSize: 11, color: '#888', display: 'flex', alignItems: 'center', gap: 3 }}><Clock size={11} /> Cierra en</p>
-                          <Countdown fechaCierre={s.fechaCierre} />
-                        </div>
+                        {s.estado === 'ACTIVA' && (
+                          <div>
+                            <p style={{ fontSize: 11, color: '#888', display: 'flex', alignItems: 'center', gap: 3 }}><Clock size={11} /> Cierra en</p>
+                            <Countdown fechaCierre={s.fechaCierre} />
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'flex-end', flexShrink: 0 }}>

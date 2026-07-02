@@ -68,13 +68,18 @@ export default function Home() {
   const { search: busqueda } = useSearch()
 
   useEffect(() => {
-    Promise.all([
-      client.get('/subastas'),
-      client.get('/categorias')
-    ]).then(([s, c]) => {
-      setSubastas(s.data)
-      setCategorias(c.data)
-    }).finally(() => setLoading(false))
+    const cargar = () => {
+      Promise.all([
+        client.get('/subastas'),
+        client.get('/categorias')
+      ]).then(([s, c]) => {
+        setSubastas(s.data)
+        setCategorias(c.data)
+      }).finally(() => setLoading(false))
+    }
+    cargar()
+    const intervalo = setInterval(cargar, 10000)
+    return () => clearInterval(intervalo)
   }, [])
 
   const subastasFiltradas = subastas
@@ -101,12 +106,12 @@ export default function Home() {
             <p style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Categorías</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <button onClick={() => setCatSeleccionada(null)}
-                style={{ background: catSeleccionada === null ? '#f0ebff' : 'none', color: catSeleccionada === null ? '#7c3aed' : '#444', border: 'none', padding: '8px 10px', borderRadius: 8, textAlign: 'left', fontWeight: catSeleccionada === null ? 600 : 400, cursor: 'pointer', fontSize: 13 }}>
+                style={{ background: catSeleccionada === null ? '#e8eaf6' : 'none', color: catSeleccionada === null ? '#2A398D' : '#444', border: 'none', padding: '8px 10px', borderRadius: 8, textAlign: 'left', fontWeight: catSeleccionada === null ? 600 : 400, cursor: 'pointer', fontSize: 13 }}>
                 Todas las categorías
               </button>
               {categorias.map(c => (
                 <button key={c.id} onClick={() => setCatSeleccionada(c.id)}
-                  style={{ background: catSeleccionada === c.id ? '#f0ebff' : 'none', color: catSeleccionada === c.id ? '#7c3aed' : '#444', border: 'none', padding: '8px 10px', borderRadius: 8, textAlign: 'left', fontWeight: catSeleccionada === c.id ? 600 : 400, cursor: 'pointer', fontSize: 13 }}>
+                  style={{ background: catSeleccionada === c.id ? '#e8eaf6' : 'none', color: catSeleccionada === c.id ? '#2A398D' : '#444', border: 'none', padding: '8px 10px', borderRadius: 8, textAlign: 'left', fontWeight: catSeleccionada === c.id ? 600 : 400, cursor: 'pointer', fontSize: 13 }}>
                   {c.nombre}
                 </button>
               ))}
@@ -119,10 +124,10 @@ export default function Home() {
           {/* Hero */}
           <div style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', borderRadius: 16, padding: '32px 40px', marginBottom: 24, position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <p style={{ color: '#a78bfa', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Mundial 2026</p>
+              <p style={{ color: '#3CAC3B', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Mundial 2026</p>
               <h1 style={{ color: 'white', fontSize: 28, fontWeight: 800, lineHeight: 1.2, marginBottom: 8 }}>
                 Tu próxima prenda<br />
-                <span style={{ color: '#a78bfa' }}>te está esperando</span>
+                <span style={{ color: '#3CAC3B' }}>te está esperando</span>
               </h1>
               <p style={{ color: '#94a3b8', fontSize: 14, marginBottom: 20 }}>Subastá y encontrá ropa deportiva de calidad<br />a los mejores precios.</p>
               <Link to='/busqueda' className='btn btn-primary' style={{ borderRadius: 24, padding: '10px 24px' }}>Explorar subastas</Link>
@@ -142,7 +147,7 @@ export default function Home() {
           ) : subastasFiltradas.length === 0 ? (
             <div className="card" style={{ padding: 48, textAlign: 'center', color: '#888' }}>
               <p style={{ fontSize: 16, marginBottom: 8 }}>No hay subastas activas</p>
-              <Link to="/crear-subasta" style={{ color: '#7c3aed', fontWeight: 600 }}>Crear una subasta</Link>
+              <Link to="/crear-subasta" style={{ color: '#2A398D', fontWeight: 600 }}>Crear una subasta</Link>
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
@@ -159,17 +164,17 @@ export default function Home() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                   <div className="avatar">{user.email?.[0]?.toUpperCase()}</div>
                   <div>
-                    <p style={{ fontWeight: 700, fontSize: 14 }}>¡Hola, {user.email?.split('@')[0]}!</p>
-                    <p style={{ fontSize: 12, color: '#888' }}>Bienvenido a SubasticaAR</p>
+                    <p style={{ fontWeight: 700, fontSize: 14 }}>¡Hola, {user.nombre || user.email?.split('@')[0]}!</p>
+                    <p style={{ fontSize: 12, color: '#888' }}>Bienvenido a LaCasacaSubastas</p>
                   </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
-                  <Link to="/mis-pujas" style={{ background: '#f9f5ff', borderRadius: 8, padding: '10px', textAlign: 'center' }}>
-                    <p style={{ fontSize: 20, fontWeight: 800, color: '#7c3aed' }}>{subastas.length}</p>
+                  <Link to="/mis-pujas" style={{ background: '#e8eaf6', borderRadius: 8, padding: '10px', textAlign: 'center' }}>
+                    <p style={{ fontSize: 20, fontWeight: 800, color: '#2A398D' }}>{subastas.length}</p>
                     <p style={{ fontSize: 11, color: '#888' }}>Subastas activas</p>
                   </Link>
-                  <Link to="/mis-subastas" style={{ background: '#f9f5ff', borderRadius: 8, padding: '10px', textAlign: 'center' }}>
-                    <p style={{ fontSize: 20, fontWeight: 800, color: '#7c3aed' }}>→</p>
+                  <Link to="/mis-subastas" style={{ background: '#e8eaf6', borderRadius: 8, padding: '10px', textAlign: 'center' }}>
+                    <p style={{ fontSize: 20, fontWeight: 800, color: '#2A398D' }}>→</p>
                     <p style={{ fontSize: 11, color: '#888' }}>Mis subastas</p>
                   </Link>
                 </div>
@@ -219,7 +224,7 @@ export default function Home() {
 
           <div className="card" style={{ padding: 16 }}>
             <p style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <TrendingUp size={15} color="#7c3aed" /> ¿Cómo funciona?
+              <TrendingUp size={15} color="#2A398D" /> ¿Cómo funciona?
             </p>
             {[
               { n: '1', t: 'Explorá', d: 'Buscá prendas que te gusten' },
@@ -228,7 +233,7 @@ export default function Home() {
               { n: '4', t: 'Recibí', d: 'Coordina la entrega con el vendedor' },
             ].map(s => (
               <div key={s.n} style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
-                <div style={{ width: 24, height: 24, background: '#f0ebff', color: '#7c3aed', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{s.n}</div>
+                <div style={{ width: 24, height: 24, background: '#e8eaf6', color: '#2A398D', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{s.n}</div>
                 <div>
                   <p style={{ fontWeight: 600, fontSize: 13 }}>{s.t}</p>
                   <p style={{ fontSize: 12, color: '#888' }}>{s.d}</p>
